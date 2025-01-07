@@ -1,6 +1,7 @@
-variable "name" {
-  description = "Name of the instance template"
+variable "name_prefix" {
+  description = "Name prefix for the instance template"
   type        = string
+  default     = "gce-vm-tpl"
 }
 
 variable "machine_type" {
@@ -41,6 +42,29 @@ variable "preemptible" {
   default     = false
 }
 
+variable "spot" {
+  type        = bool
+  description = "Provision a SPOT instance"
+  default     = false
+}
+
+variable "spot_instance_termination_action" {
+  description = "Action to take when Compute Engine preempts a Spot VM."
+  type        = string
+  default     = "STOP"
+
+  validation {
+    condition     = contains(["STOP", "DELETE"], var.spot_instance_termination_action)
+    error_message = "Allowed values for spot_instance_termination_action are: \"STOP\" or \"DELETE\"."
+  }
+}
+
+variable "min_cpu_platform" {
+  description = "Specifies a minimum CPU platform. Applicable values are the friendly names of CPU platforms, such as Intel Haswell or Intel Skylake. See the complete list: https://cloud.google.com/compute/docs/instances/specify-min-cpu-platform"
+  type        = string
+  default     = null
+}
+
 variable "enable_sole_tenancy" {
   description = "Enable sole tenancy for the instance"
   type        = bool
@@ -63,6 +87,18 @@ variable "sole_tenancy_values" {
   description = "Values for sole tenancy affinity rule"
   type        = list(string)
   default     = []
+}
+
+variable "tags" {
+  type        = list(string)
+  description = "Network tags, provided as a list"
+  default     = []
+}
+
+variable "labels" {
+  type        = map(string)
+  description = "Labels for the GCE VM instance, provided as a map"
+  default     = {}
 }
 
 #######
@@ -93,7 +129,7 @@ variable "disk_size_gb" {
 }
 
 variable "disk_type" {
-  description = "Boot disk type, can be pd-ssd, local-ssd, pd-balanced, pd-standard etc,."
+  description = "GCE disk type. Such as "pd-ssd", "local-ssd", "pd-balanced" or "pd-standard", "pd-ssd", "pd-extreme", "hyperdisk-balanced", "hyperdisk-throughput" or "hyperdisk-extreme"."
   type        = string
   default     = "pd-balanced"
 }
@@ -105,13 +141,20 @@ variable "disk_labels" {
 }
 
 variable "additional_disks" {
-  description = "Additional disks for the VM"
-  type        = list(object({
-    auto_delete = optional(bool)
-    source_image = optional(string)
-    disk_size = optional(number)
-    disk_type = optional(string)
-    disk_labels = optional(map)
+  description = "List of maps of additional disks. See https://www.terraform.io/docs/providers/google/r/compute_instance_template#disk_name"
+  type = list(object({
+    auto_delete     = optional(bool, true)
+    boot            = optional(bool, false)
+    device_name     = optional(string)
+    disk_name       = optional(string)
+    disk_size_gb    = optional(number)
+    disk_type       = optional(string)
+    disk_labels     = optional(map(string), {})
+    interface       = optional(string)
+    mode            = optional(string)
+    source          = optional(string)
+    source_image    = optional(string)
+    source_snapshot = optional(string)
   }))
   default = []
 }
