@@ -101,9 +101,9 @@ variable "disk_size" {
 }
 
 variable "disk_type" {
-  description = "Disk type for the VM (pd-standard, pd-ssd, etc.)"
+  description = "Disk type for the VM (pd-standard, pd-balanced, pd-ssd, etc.)"
   type        = string
-  default     = "pd-standard"
+  default     = "pd-balanced"
 }
 
 variable "cmek_key" {
