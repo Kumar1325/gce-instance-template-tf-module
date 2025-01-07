@@ -1,5 +1,5 @@
 resource "google_compute_instance_template" "default" {
-  name_prefix        = var.name
+  name               = var.name
   machine_type       = var.machine_type
   region             = var.region
   can_ip_forward     = false
