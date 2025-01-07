@@ -111,6 +111,7 @@ variable "additional_disks" {
     source_image = optional(string)
     disk_size = optional(number)
     disk_type = optional(string)
+    disk_labels = optional(map)
   }))
   default = []
 }
