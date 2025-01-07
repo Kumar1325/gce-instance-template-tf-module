@@ -1,8 +1,30 @@
 locals {
   source_image     = var.source_image != "" ? var.source_image : data.google_compute_image.image.self_link
-  
-# must be set to "AMD Milan" if confidential_instance_type is set to "SEV_SNP", or this will fail to create the VM.
+
+  # NOTE: Even if all the shielded_instance_config or confidential_instance_config
+  # values are false, if the config block exists and an unsupported image is chosen,
+  # the apply will fail so we use a single-value array with the default value to
+  # initialize the block only if it is enabled.
+  shielded_vm_configs = var.enable_shielded_vm ? [true] : []
+
+  confidential_terminate_condition = var.enable_confidential_vm && (var.confidential_instance_type != "SEV" || var.min_cpu_platform != "AMD Milan")
+  on_host_maintenance = (
+    var.preemptible || var.spot || local.confidential_terminate_condition
+    ? "TERMINATE"
+    : var.on_host_maintenance
+  )
+
+  # must be set to "AMD Milan" if confidential_instance_type is set to "SEV_SNP", or this will fail to create the VM.
   min_cpu_platform = var.confidential_instance_type == "SEV_SNP" ? "AMD Milan" : var.min_cpu_platform
+
+  automatic_restart = (
+    # must be false when preemptible or spot is true
+    var.preemptible || var.spot ? false : var.automatic_restart
+  )
+  preemptible = (
+    # must be true when preemtible or spot is true
+    var.preemptible || var.spot ? true : false
+  )
 }
 
 data "google_compute_image" "image" {
@@ -38,8 +60,8 @@ resource "google_compute_instance_template" "default" {
   }
 
   scheduling {
-    on_host_maintenance = var.on_host_maintenance
-    automatic_restart   = var.automatic_restart
+    on_host_maintenance = local.on_host_maintenance
+    automatic_restart   = local.automatic_restart
     preemptible         = var.preemptible
     node_affinities = var.enable_sole_tenancy ? [{
       key      = var.sole_tenancy_key
