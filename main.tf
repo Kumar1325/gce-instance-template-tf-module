@@ -1,21 +1,40 @@
-resource "google_compute_instance_template" "default" {
-  name               = var.name
-  machine_type       = var.machine_type
-  region             = var.region
-  can_ip_forward     = false
-  description        = var.description
+locals {
+  source_image     = var.source_image != "" ? var.source_image : data.google_compute_image.image.self_link
+  
+# must be set to "AMD Milan" if confidential_instance_type is set to "SEV_SNP", or this will fail to create the VM.
+  min_cpu_platform = var.confidential_instance_type == "SEV_SNP" ? "AMD Milan" : var.min_cpu_platform
+}
 
-  dynamic "confidential_instance_config" {
-    for_each = var.enable_confidential_vm ? [1] : []
+data "google_compute_image" "image" {
+  family  = var.source_image_family
+  project = var.source_image_project
+}
+
+resource "google_compute_instance_template" "default" {
+  name                    = var.name
+  machine_type            = var.machine_type
+  region                  = var.region
+  can_ip_forward          = false
+  description             = var.description
+  project                = var.project_id
+  labels                  = var.labels
+  metadata                = var.metadata
+  tags                    = var.tags
+  min_cpu_platform        = local.min_cpu_platform
+  metadata_startup_script = var.startup_script
+
+  dynamic "shielded_instance_config" {
+    for_each = local.shielded_vm_configs
     content {
-      enable_confidential_compute = true
+      enable_secure_boot          = lookup(var.shielded_instance_config, "enable_secure_boot", shielded_instance_config.value)
+      enable_vtpm                 = lookup(var.shielded_instance_config, "enable_vtpm", shielded_instance_config.value)
+      enable_integrity_monitoring = lookup(var.shielded_instance_config, "enable_integrity_monitoring", shielded_instance_config.value)
     }
   }
 
-  shielded_instance_config {
-    enable_secure_boot          = var.shielded_secure_boot
-    enable_vtpm                 = var.shielded_vtpm
-    enable_integrity_monitoring = var.shielded_integrity_monitoring
+  confidential_instance_config {
+    enable_confidential_compute = var.enable_confidential_vm
+    confidential_instance_type  = var.confidential_instance_type
   }
 
   scheduling {
@@ -32,9 +51,10 @@ resource "google_compute_instance_template" "default" {
   disk {
     auto_delete       = true
     boot              = true
-    source_image      = var.source_image
+    source_image      = local.source_image
     disk_size_gb      = var.disk_size
     disk_type         = var.disk_type
+    lables            = var.disk_labels
     kms_key_self_link = var.cmek_key
   }
 
@@ -46,9 +66,19 @@ resource "google_compute_instance_template" "default" {
       source_image      = lookup(additional_disks.value, "source_image", null)
       disk_size_gb      = lookup(additional_disks.value, "disk_size", null)
       disk_type         = lookup(additional_disks.value, "disk_type", null)
+      labels            = lookup(addintonal_disks.value, "disk_labels", null)
       kms_key_self_link = var.cmek_key
     }
   }
+
+  dynamic "service_account" {
+    for_each = var.service_account == null ? [] : [var.service_account]
+    content {
+      email  = lookup(service_account.value, "email", null)
+      scopes = lookup(service_account.value, "scopes", null)
+    }
+  }
+
   lifecycle {
     create_before_destroy = true
   }
