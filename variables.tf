@@ -1,5 +1,5 @@
-variable "name_prefix" {
-  description = "Name prefix of the instance template"
+variable "name" {
+  description = "Name of the instance template"
   type        = string
 }
 
