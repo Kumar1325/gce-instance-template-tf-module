@@ -38,7 +38,6 @@ resource "google_compute_instance_template" "default" {
   region                  = var.region
   can_ip_forward          = false
   description             = var.description
-  project                = var.project_id
   labels                  = var.labels
   metadata                = var.metadata
   tags                    = var.tags
@@ -80,15 +79,22 @@ resource "google_compute_instance_template" "default" {
     kms_key_self_link = var.cmek_key
   }
 
-  dynamic "additional_disks" {
+  dynamic "disk" {
     for_each = var.additional_disks
     content {
-      auto_delete       = lookup(additional_disks.value, "auto_delete", true)
+      auto_delete       = lookup(disk.value, "auto_delete", true)
       boot              = false
-      source_image      = lookup(additional_disks.value, "source_image", null)
-      disk_size_gb      = lookup(additional_disks.value, "disk_size", null)
-      disk_type         = lookup(additional_disks.value, "disk_type", null)
-      labels            = lookup(addintonal_disks.value, "disk_labels", null)
+      device_name       = lookup(disk.value, "device_name", null)
+      disk_name         = lookup(disk.value, "disk_name", null)
+      disk_size_gb      = lookup(disk.value, "disk_size_gb", lookup(disk.value, "disk_type", null) == "local-ssd" ? "375" : 100)
+      disk_type         = lookup(disk.value, "disk_type", "pd-standard")
+      interface         = lookup(disk.value, "interface", lookup(disk.value, "disk_type", null) != "local-ssd" ? "SCSI" : null)
+      mode              = lookup(disk.value, "mode", "READ_WRITE")
+      source            = lookup(disk.value, "source", null)
+      source_image      = lookup(disk.value, "source_image", null)
+      source_snapshot   = lookup(disk.value, "source_snapshot", null)
+      type              = lookup(disk.value, "disk_type", null) == "local-ssd" ? "SCRATCH" : "PERSISTENT"
+      labels            = lookup(disk.value, "disk_labels", null)
       kms_key_self_link = var.cmek_key
     }
   }
