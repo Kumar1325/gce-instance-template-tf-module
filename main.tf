@@ -49,4 +49,7 @@ resource "google_compute_instance_template" "default" {
       kms_key_self_link = var.cmek_key
     }
   }
+  lifecycle {
+    create_before_destroy = true
+  }
 }
