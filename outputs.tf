@@ -1,9 +1,9 @@
-output "instance_template_name" {
+output "name" {
   description = "Instance Template name"
   value = google_compute_instance_template.tpl.name
 }
 
-output "instance_template_id" {
+output "id" {
   description = "An identifier for the resource with format projects/{{project}}/global/instanceTemplates/{{name}}"
   value = google_compute_instance_template.tpl.id
 }

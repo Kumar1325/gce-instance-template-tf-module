@@ -14,8 +14,13 @@ variable "machine_type" {
 }
 
 variable "region" {
-  description = "Region for the instance template"
+  description = "Region where the instance will be deployed. Allowed values: US-CENTRAL1, US-EAST4, US-WEST3"
   type        = string
+  default     = "us-central1"
+  validation {
+    condition     = contains(["us-central1", "us-east4", "us-west3"], lower(var.region))
+    error_message = "Invalid region specified. Allowed values are: US-CENTRAL1, US-EAST4, US-WEST3 (case-insensitive)."
+  }
 }
 
 variable "description" {
@@ -129,7 +134,7 @@ variable "disk_size_gb" {
 }
 
 variable "disk_type" {
-  description = "GCE disk type. Such as "pd-ssd", "local-ssd", "pd-balanced" or "pd-standard", "pd-ssd", "pd-extreme", "hyperdisk-balanced", "hyperdisk-throughput" or "hyperdisk-extreme"."
+  description = "GCE disk type. Such as pd-ssd, local-ssd, pd-balanced or pd-standard, pd-ssd, pd-extreme, hyperdisk-balanced, hyperdisk-throughput or hyperdisk-extreme."
   type        = string
   default     = "pd-balanced"
 }
@@ -138,6 +143,11 @@ variable "disk_labels" {
   description = "Labels to be assigned to boot disk, provided as a map"
   type        = map(string)
   default     = {}
+}
+
+variable "disk_encryption_key" {
+  description = "The id of the encryption key that is stored in Google Cloud KMS to use to encrypt all the disks on this instance"
+  type        = string
 }
 
 variable "additional_disks" {
@@ -157,6 +167,42 @@ variable "additional_disks" {
     source_snapshot = optional(string)
   }))
   default = []
+}
+
+####################
+# network_interface
+####################
+variable "network" {
+  description = "The name or self_link of the network to attach this interface to."
+  type        = string
+}
+
+variable "subnetwork" {
+  description = "The name of the subnetwork to attach this interface to. The subnetwork must exist in the same region this instance will be created in. Either network or subnetwork must be provided."
+  type        = string
+}
+
+variable "subnetwork_project" {
+  description = "The ID of the project in which the subnetwork belongs. If it is not provided, the provider project is used."
+  type        = string
+  default     = ""
+}
+
+variable "nic_type" {
+  description = "Valid values are \"VIRTIO_NET\", \"GVNIC\" or set to null to accept API default behavior."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.nic_type == null || var.nic_type == "GVNIC" || var.nic_type == "VIRTIO_NET"
+    error_message = "The \"nic_type\" variable must be set to \"VIRTIO_NET\", \"GVNIC\", or null to allow API default selection."
+  }
+}
+
+variable "stack_type" {
+  description = "The stack type for this network interface to identify whether the IPv6 feature is enabled or not. Values are `IPV4_IPV6` or `IPV4_ONLY`. Default behavior is equivalent to IPV4_ONLY."
+  type        = string
+  default     = null
 }
 
 ###########

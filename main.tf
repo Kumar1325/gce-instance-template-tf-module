@@ -62,21 +62,26 @@ resource "google_compute_instance_template" "tpl" {
     on_host_maintenance = local.on_host_maintenance
     automatic_restart   = local.automatic_restart
     preemptible         = var.preemptible
-    node_affinities = var.enable_sole_tenancy ? [{
-      key      = var.sole_tenancy_key
-      operator = var.sole_tenancy_operator
-      values   = var.sole_tenancy_values
-    }] : null
+    dynamic "node_affinities" {
+      for_each = var.enable_sole_tenancy ? [1] : []
+      content {
+        key      = "compute.googleapis.com/node-group-name"
+        operator = var.sole_tenancy_operator
+        values   = var.sole_tenancy_values
+      }
+    }
   }
 
   disk {
     auto_delete       = true
     boot              = true
     source_image      = local.source_image
-    disk_size_gb      = var.disk_size
+    disk_size_gb      = var.disk_size_gb
     disk_type         = var.disk_type
-    lables            = var.disk_labels
-    kms_key_self_link = var.cmek_key
+    labels            = var.disk_labels
+    disk_encryption_key {
+      kms_key_self_link = var.disk_encryption_key
+    }
   }
 
   dynamic "disk" {
@@ -95,7 +100,9 @@ resource "google_compute_instance_template" "tpl" {
       source_snapshot   = lookup(disk.value, "source_snapshot", null)
       type              = lookup(disk.value, "disk_type", null) == "local-ssd" ? "SCRATCH" : "PERSISTENT"
       labels            = lookup(disk.value, "disk_labels", null)
-      kms_key_self_link = var.cmek_key
+      disk_encryption_key {
+        kms_key_self_link = var.disk_encryption_key
+      }
     }
   }
 
@@ -105,6 +112,14 @@ resource "google_compute_instance_template" "tpl" {
       email  = lookup(service_account.value, "email", null)
       scopes = lookup(service_account.value, "scopes", null)
     }
+  }
+
+  network_interface {
+    network            = var.network
+    subnetwork         = var.subnetwork
+    subnetwork_project = var.subnetwork_project
+    nic_type           = var.nic_type
+    stack_type         = var.stack_type
   }
 
   lifecycle {
