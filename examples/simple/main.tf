@@ -1,4 +1,22 @@
-module "simple_vm" {
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
+resource "google_kms_key_ring" "keyring" {
+  name     = "keyring-example"
+  location = "global"
+}
+
+resource "google_kms_crypto_key" "example-key" {
+  name            = "crypto-key-example"
+  key_ring        = google_kms_key_ring.keyring.id
+  rotation_period = "100000s"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}module "simple_vm" {
   source                = "../../"
   name_prefix           = "simple-vm-template-"
   machine_type          = "e2-medium"
