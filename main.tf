@@ -94,7 +94,7 @@ resource "google_compute_instance_template" "tpl" {
       disk_size_gb      = lookup(disk.value, "disk_size_gb", lookup(disk.value, "disk_type", null) == "local-ssd" ? "375" : 100)
       disk_type         = lookup(disk.value, "disk_type", "pd-standard")
       interface         = lookup(disk.value, "interface", lookup(disk.value, "disk_type", null) != "local-ssd" ? "SCSI" : null)
-      mode              = lookup(disk.value, "mode", "READ_WRITE")
+      mode              = lookup(disk.value, "mode", null)
       source            = lookup(disk.value, "source", null)
       source_image      = lookup(disk.value, "source_image", null)
       source_snapshot   = lookup(disk.value, "source_snapshot", null)
