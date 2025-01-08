@@ -8,14 +8,11 @@ variable "machine_type" {
   description = "Machine type for the VM"
   type        = string
   validation {
-    condition = var.enable_confidential_vm ? contains(
-      [
-        "n2d",
-        "c2d",
-        "c3d"
-      ],
-      split("-", var.machine_type)[0]
-    ) : var.machine_type
+    condition = (
+      !var.enable_confidential_vm || (
+        contains(["n2d", "c2d", "c3d"], split("-", var.machine_type)[0])
+      )
+    )
     error_message = "Only N2D, C2D, and C3D machine types are supported for Confidential VMs."
   }
 }
@@ -275,11 +272,11 @@ variable "enable_confidential_vm" {
 
 variable "confidential_instance_type" {
   type        = string
-  default     = null
+  default = "SEV"
   description = "Defines the confidential computing technology the instance uses. If this is set to \"SEV_SNP\", var.min_cpu_platform will be automatically set to \"AMD Milan\". See https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#confidential_instance_type."
 
   validation {
     condition     = contains(["SEV", "SEV_SNP", "TDX"], var.confidential_instance_type)
-    error_message = "Allowed values for confidential_instance_type are: \"SEV\" \"SEV_SNP\" or \"TDX\"."
+    error_message = "Allowed values for confidential_instance_type are: \"SEV\", \"SEV_SNP\" or \"TDX\"."
   }
 }
