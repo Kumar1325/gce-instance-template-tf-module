@@ -46,7 +46,7 @@ module "advanced_vm" {
   enable_confidential_vm     = true
   confidential_instance_type = "SEV"
 
-  source_image_family = "rhel-8"
+  source_image_family  = "rhel-8"
   source_image_project = "rhel-cloud"
 
   additional_disks = [

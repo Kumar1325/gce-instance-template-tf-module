@@ -1,5 +1,5 @@
 locals {
-  source_image     = var.source_image != "" ? var.source_image : data.google_compute_image.image.self_link
+  source_image = var.source_image != "" ? var.source_image : data.google_compute_image.image.self_link
 
   # NOTE: Even if all the shielded_instance_config or confidential_instance_config
   # values are false, if the config block exists and an unsupported image is chosen,
@@ -73,12 +73,12 @@ resource "google_compute_instance_template" "tpl" {
   }
 
   disk {
-    auto_delete       = true
-    boot              = true
-    source_image      = local.source_image
-    disk_size_gb      = var.disk_size_gb
-    disk_type         = var.disk_type
-    labels            = var.disk_labels
+    auto_delete  = true
+    boot         = true
+    source_image = local.source_image
+    disk_size_gb = var.disk_size_gb
+    disk_type    = var.disk_type
+    labels       = var.disk_labels
     disk_encryption_key {
       kms_key_self_link = var.disk_encryption_key
     }
@@ -87,19 +87,19 @@ resource "google_compute_instance_template" "tpl" {
   dynamic "disk" {
     for_each = var.additional_disks
     content {
-      auto_delete       = lookup(disk.value, "auto_delete", true)
-      boot              = false
-      device_name       = lookup(disk.value, "device_name", null)
-      disk_name         = lookup(disk.value, "disk_name", null)
-      disk_size_gb      = lookup(disk.value, "disk_size_gb", lookup(disk.value, "disk_type", null) == "local-ssd" ? "375" : 100)
-      disk_type         = lookup(disk.value, "disk_type", "pd-standard")
-      interface         = lookup(disk.value, "interface", lookup(disk.value, "disk_type", null) != "local-ssd" ? "SCSI" : null)
-      mode              = lookup(disk.value, "mode", null)
-      source            = lookup(disk.value, "source", null)
-      source_image      = lookup(disk.value, "source_image", null)
-      source_snapshot   = lookup(disk.value, "source_snapshot", null)
-      type              = lookup(disk.value, "disk_type", null) == "local-ssd" ? "SCRATCH" : "PERSISTENT"
-      labels            = lookup(disk.value, "disk_labels", null)
+      auto_delete     = lookup(disk.value, "auto_delete", true)
+      boot            = false
+      device_name     = lookup(disk.value, "device_name", null)
+      disk_name       = lookup(disk.value, "disk_name", null)
+      disk_size_gb    = lookup(disk.value, "disk_size_gb", lookup(disk.value, "disk_type", null) == "local-ssd" ? "375" : 100)
+      disk_type       = lookup(disk.value, "disk_type", "pd-standard")
+      interface       = lookup(disk.value, "interface", lookup(disk.value, "disk_type", null) != "local-ssd" ? "SCSI" : null)
+      mode            = lookup(disk.value, "mode", null)
+      source          = lookup(disk.value, "source", null)
+      source_image    = lookup(disk.value, "source_image", null)
+      source_snapshot = lookup(disk.value, "source_snapshot", null)
+      type            = lookup(disk.value, "disk_type", null) == "local-ssd" ? "SCRATCH" : "PERSISTENT"
+      labels          = lookup(disk.value, "disk_labels", null)
       disk_encryption_key {
         kms_key_self_link = var.disk_encryption_key
       }
