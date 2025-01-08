@@ -1,0 +1,14 @@
+**/.terraform/**
+**tfstate*
+**/*.pem
+terraform.tfvars
+**/account.json
+**/credentials
+.DS_Store
+.terraform
+.terraform.tfstate.d
+*.pyc
+credentials*.json
+
+# tf lock file
+.terraform.lock.hcl
