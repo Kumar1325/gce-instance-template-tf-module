@@ -32,8 +32,8 @@ data "google_compute_image" "image" {
   project = var.source_image_project
 }
 
-resource "google_compute_instance_template" "default" {
-  name                    = var.name
+resource "google_compute_instance_template" "tpl" {
+  name_prefix             = var.name_prefix
   machine_type            = var.machine_type
   region                  = var.region
   can_ip_forward          = false
