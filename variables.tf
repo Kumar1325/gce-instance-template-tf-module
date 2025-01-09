@@ -272,11 +272,11 @@ variable "enable_confidential_vm" {
 
 variable "confidential_instance_type" {
   type        = string
-  default     = "SEV"
+  default     = null
   description = "Defines the confidential computing technology the instance uses. If this is set to \"SEV_SNP\", var.min_cpu_platform will be automatically set to \"AMD Milan\". See https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#confidential_instance_type."
 
   validation {
-    condition     = contains(["SEV", "SEV_SNP", "TDX"], var.confidential_instance_type)
+    condition     = var.confidential_instance_type == null || var.confidential_instance_type == "SEV" || var.confidential_instance_type == "SEV_SNP" || var.confidential_instance_type == "TDX"
     error_message = "Allowed values for confidential_instance_type are: \"SEV\", \"SEV_SNP\" or \"TDX\"."
   }
 }
