@@ -8,7 +8,7 @@ data "google_project" "project" {
 }
 
 resource "google_kms_key_ring" "keyring" {
-  name     = "keyring-example"
+  name     = "simple-keyring-example"
   location = var.region
 }
 
@@ -37,4 +37,17 @@ module "simple_vm" {
   service_account     = var.service_account
   source_image        = "projects/debian-cloud/global/images/family/debian-11"
   disk_encryption_key = google_kms_crypto_key.example-key.id
+}
+
+resource "google_compute_instance_from_template" "tpl" {
+  name = "instance-from-template"
+  zone = "us-central1-a"
+
+  source_instance_template = module.simple_vm.self_link_unique
+
+  // Override fields from instance template
+  can_ip_forward = false
+  labels = {
+    name = "test-instance"
+  }
 }
