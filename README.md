@@ -36,7 +36,7 @@ Before using this module, you must have:
 | `labels`                          | Labels for the instance template, provided as a map.                                                     | `map(string)` | `{}`         | no       |
 | `disk_size_gb`                    | Boot disk size in GB.                                                                                   | `string`     | `20`          | no       |
 | `disk_type`                       | Disk type for the instance (e.g., `pd-ssd`, `local-ssd`, `pd-balanced`).                                 | `string`     | `pd-balanced` | no       |
-| `disk_encryption_key`             | The encryption key ID to encrypt all disks on this instance.                                              | `string`     | `null`        | no       |
+| `disk_encryption_key`             | The encryption key ID to encrypt all disks on this instance.                                              | `string`     | n/a        | yes      |
 | `additional_disks`                | List of additional disks attached to the instance.                                                       | `list(object)` | `[]`         | no       |
 | `network`                         | Network to attach the instance to.                                                                        | `string`     | n/a           | yes      |
 | `subnetwork`                      | Subnetwork to attach the instance to.                                                                    | `string`     | n/a           | yes      |
@@ -63,19 +63,16 @@ Before using this module, you must have:
 
 ```hcl
 module "instance_template" {
-  source        = "path/to/your/module"
+  source        = "examples/simple"
   project_id    = "your-gcp-project-id"
   region        = "us-central1"
   name_prefix   = "my-instance-template"
   machine_type  = "n1-standard-4"
-  enable_shielded_vm = true
-  enable_confidential_vm = false
   tags          = ["web-server", "production"]
   disk_size_gb  = "50"
   metadata      = {
     "startup-script" = "#!/bin/bash\necho Hello, world!"
   }
-
   network       = "default"
   subnetwork    = "default"
   service_account = {
@@ -89,19 +86,23 @@ output "instance_template_id" {
 }
 ```
 
-### Example with Confidential VMs and Sole Tenancy
+### Example with Confidential VMs and Shielded VM
 ```hcl
 module "instance_template" {
-  source                = "path/to/your/module"
+  source                = "example/advanced-vm/"
   project_id            = "your-gcp-project-id"
   region                = "us-west3"
   name_prefix           = "secure-instance-template"
   machine_type          = "n2d-standard-8"
   enable_confidential_vm = true
   confidential_instance_type = "SEV_SNP"
-  enable_sole_tenancy   = true
-  sole_tenancy_key      = "some-key"
-  tags                  = ["secure", "confidential"]
+  enable_shielded_vm = true
+  shielded_instance_config = {
+    enable_secure_boot          = true
+    enable_vtpm                 = true
+    enable_integrity_monitoring = true
+  }
+  tags                  = ["shielded", "confidential"]
   metadata              = {
     "startup-script" = "#!/bin/bash\necho Secure VM!"
   }
